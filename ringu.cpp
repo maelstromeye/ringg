@@ -24,9 +24,10 @@ template<typename Key> class Ring
 				Iterator() {curr=NULL;}			//default constructor
 				Iterator(Node* nodeptr){curr=nodeptr;}	//starting point consturctor
 				Iterator(Ring<Key> ring){curr=ring.head;}	//construct and assign to object
+				~Iterator(){curr=NULL;}
 				Iterator operator++(){curr=curr->next; return *this;}	//next element
 				Iterator operator--(){curr=curr->prev; return *this;}	//previous element
-				Key operator*(){if(curr) return curr->key; else return 0;}	//access element
+				Key operator*(){if(curr!=NULL) return curr->key; else return 0;}	//access element
 		};
 		Ring()			//default constructor
 		{
@@ -138,7 +139,7 @@ template<typename Key> class Ring
 			}
 			return true;
 		}
-		Key operator[](int i)	//access key at index
+		Key operator[](int i) const	//access key at index
 		{
 			if(i<0) return 0;	//wrong argument
 			if(isempty()) return 0;
@@ -309,39 +310,50 @@ template <typename Key>
 void split(const Ring<Key> &source, Ring<Key> &result1, bool dir1, int len1, Ring<Key> &result2, bool dir2, int len2)	//split function
 {
 	if(source.isempty()) return;
-	Ring<Key> ring(source);	//copy source (if one of the arguments was source, the algorithm would break)
-	typename Ring<Key>::Iterator iterator1(ring), iterator2(ring);	//iterators for 2 rings
-	result1.clear();	
-	result2.clear();	//clear 2 outputs
-	++iterator2;	//ring2 starts building at 2nd element
+	if((&result1==&source)||(&result2==&source)) return;
+	cout<<"del1"<<endl;
+	result1.clear();
+	cout<<"del2"<<endl;	
+	result2.clear();	//clear 2 outputs	//ring2 starts building at 2nd element
+	cout<<"start build"<<endl;
+	result1.putBack(1);
+	cout<<"wtf"<<endl;
+	cout<<"eh"<<endl;
+	result1.clear();
+	int j=0;
 	if(dir1)	//ring1
 	{
-		for(int i=0; i<len1; i++, ++iterator1, ++iterator1)	//clockwise
+		for(int i=0; i<len1; i++, j+=2)	//clockwise
 		{
-			result1.putBack(*iterator1);
+			cout<<"insert1"<<endl;
+			result1.putBack(source[j]);
 		}
 	}
 	else
 	{
-		for(int i=0; i<len1; i++, ++iterator1, ++iterator1)	//counter clockwise
+		for(int i=0; i<len1; i++, j+=2)	//counter clockwise
 		{
-			result1.insert(*iterator1, 1);
+			result1.insert(source[j], 1);
 		}
 	}
+	cout<<"finish1"<<endl;
+	j=1;
 	if(dir2)	//second ring
 	{
-		for(int i=0; i<len2; i++, ++iterator2, ++iterator2)	//clockwise
+		for(int i=0; i<len2; i++, j+=2)	//clockwise
 		{
-			result2.putBack(*iterator2);
+			result2.putBack(source[j]);
 		}
 	}
 	else
 	{
-		for(int i=0; i<len2; i++, ++iterator2, ++iterator2)	//counter clockwise
+		for(int i=0; i<len2; i++, j+=2)	//counter clockwise
 		{
-			result2.insert(*iterator2, 1);
+			cout<<"insert2"<<endl;
+			result2.insert(source[j], 1);
 		}
 	}
+	cout<<"finsish2"<<endl;
 }
 void key()	//"Press enter to continue"
 {
@@ -497,18 +509,24 @@ template<typename Key>
 void splittest(Ring<Key> &source, Ring<Key> &result1, bool dir1, int len1, Ring<Key> &result2, bool dir2, int len2)	//test split function
 {
 	if(source.isempty()) return;
+	if((&result1==&source)||(&result2==&source))
+	{
+		cout<<"Wrong arguments"<<endl;
+		return;
+	}
 	Ring<Key> ring(source);
 	split(source, result1, dir1, len1, result2, dir2, len2);
-	typename Ring<Key>::Iterator it1(ring), it2(ring), it3(result1), it4(result2);
 	cout<<"Split function for ring: "<<endl;
 	ring.print();
+	int j=0;
 	if(dir1)
 	{
-		for(int i=0; i<len1; i++, ++it1, ++it1, ++it3)
+		for(int i=0; i<len1; j+=2, i++)
 		{
-			if(*it1!=*it3)
+			if(ring[j]!=result1[i])
 			{
-				cout<<"Split function fault, aborting"<<endl;
+				result1.print();
+				cout<<"Split function fault, aborting, at "<<i<<", "<<ring[j]<<" is not "<<result1[i]<<endl;
 				key();
 				return;
 			}
@@ -516,25 +534,27 @@ void splittest(Ring<Key> &source, Ring<Key> &result1, bool dir1, int len1, Ring<
 	}
 	else
 	{
-		for(int i=0; i<len1; i++, ++it1, ++it1, --it3)
+		for(int i=0; i<len1; i++, j+=2)
 		{
-			if(*it1!=*it3)
+			if(ring[j]!=result1[result1.getsize()-i])
 			{
-				cout<<"Split function fault, aborting"<<endl;
+				result1.print();
+				cout<<"Split function fault, aborting, at "<<i<<", "<<ring[j]<<" is not "<<result1[i]<<endl;
 				key();
 				return;
 			}
 		}
 	}
 	result1.print();
-	++it2;
+	j=1;
 	if(dir2)
 	{
-		for(int i=0; i<len2; i++, ++it2, ++it2, ++it4)
+		for(int i=0; i<len2; j+=2, i++)
 		{
-			if(*it2!=*it4)
+			if(ring[j]!=result2[i])
 			{
-				cout<<"Split function fault, aborting"<<endl;
+				result2.print();
+				cout<<"Split function fault, aborting, at "<<i<<", "<<ring[j]<<" is not "<<result2[result2.getsize()-i]<<endl;
 				key();
 				return;
 			}
@@ -542,18 +562,19 @@ void splittest(Ring<Key> &source, Ring<Key> &result1, bool dir1, int len1, Ring<
 	}
 	else
 	{
-		for(int i=0; i<len2; i++, ++it2, ++it2, --it4)
+		for(int i=0; i<len2; j+=2, i++)
 		{
-			if(*it2!=*it4)
+			if(ring[j]!=result2[result2.getsize()-i])
 			{
 				result2.print();
-				cout<<"Split function fault, aborting"<<endl;
+				cout<<"Split function fault, aborting, at "<<i<<", "<<ring[j]<<" is not "<<result2[result2.getsize()-i]<<endl;
 				key();
 				return;
 			}
 		}
 	}
 	result2.print();
+	cout<<"End of test"<<endl;
 	key();
 }
 int main ()
@@ -566,9 +587,11 @@ int main ()
 	Ring<int> ring2(arr2, 10);
 	Ring<int> ring3(arr3, 9);
 	Ring <int> blank;	//empty list
-	splittest(ring2, ring2, true, 3, ring3, false, 7);
-	splittest(ring1, blank, true, 3, ring2, false, 7);
-	splittest(ring1, ring1, true, 3, ring1, false, 7);
+	splittest(ring1, ring2, true, 3, ring3, false, 7);
+	splittest(ring2, blank, true, 3, ring2, false, 7);
+	splittest(ring3, ring3, true, 3, ring1, false, 7);
+	splittest(ring3, ring2, true, 10, ring1, true, 6);
+	splittest(ring2, ring1, false, 14, ring3, false, 69);
 	stresstest(ring1, 6, 1, 232, 1, 2, 0, 5, 232);
 	stresstest(blank, 7, 7, 676, 3, 2, 3, 1, 7);	//test the lists
 	stresstest(ring3, 2, 1, 8, 0, 10, 67, 89, 89);
