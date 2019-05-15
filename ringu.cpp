@@ -228,6 +228,12 @@ template<typename Key> class Ring
 		void popFront()	//pop head
 		{
 			if(isempty()) return;
+			if(size==1){
+				delete head;
+				head = NULL;
+				size =0;
+				return;
+			}
 			Node* nodeptr;
 			head->prev->next=head->next;
 			head->next->prev=head->prev;
@@ -239,6 +245,12 @@ template<typename Key> class Ring
 		void popBack()	//pop element before head
 		{
 			if(isempty()) return;
+			if(size == 1){
+				delete head;
+				head = NULL;
+				size=0;
+				return;
+			}
 			head=head->prev;
 			popFront();
 		}
